@@ -1,5 +1,5 @@
 [app]
-title = Калькулятор
+title = Калькулятор тихони
 package.name = calculator
 package.domain = org.example
 source.dir = .
