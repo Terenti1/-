@@ -61,14 +61,14 @@ class CalcRoot(BoxLayout):
             return (0.75, 0.30, 0.30, 1)   # красные — очистка
         return (0.25, 0.25, 0.28, 1)       # серые — цифры
 
-    def on_press(self, instance):
+        def on_press(self, instance):
         t = instance.text
 
         if t == 'C':
             self.expression = ''
             self.display.text = '0'
 
-        elif t == '⌫':
+        elif t == '<[x]':
             self.expression = self.expression[:-1]
             self.display.text = self.expression or '0'
 
