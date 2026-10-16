@@ -15,7 +15,7 @@ class CalcRoot(BoxLayout):
         super().__init__(orientation='vertical', padding=dp(10),
                          spacing=dp(8), **kwargs)
 
-        # --- Место для картинки (замените logo.png на свою) ---
+        # --- Место для картинки ---
         img_box = BoxLayout(size_hint_y=None, height=dp(180))
         self.image = Image(source='images.jpg',
                            allow_stretch=True, keep_ratio=True)
@@ -35,16 +35,21 @@ class CalcRoot(BoxLayout):
         # --- Кнопки ---
         grid = GridLayout(cols=4, spacing=dp(6))
         layout = [
-            ('C', 'clear'), ('√', 'sqrt'), ('^', 'op'),   ('÷', 'op'),
-            ('7', 'num'),   ('8', 'num'),  ('9', 'num'),  ('×', 'op'),
-            ('4', 'num'),   ('5', 'num'),  ('6', 'num'),  ('-', 'op'),
-            ('1', 'num'),   ('2', 'num'),  ('3', 'num'),  ('+', 'op'),
-            ('0', 'num'),   ('.', 'num'),  ('<[x]', 'back'), ('=', 'eq'),
+            ('C', 'clear'), ('√', 'sqrt'), ('^', 'op'),       ('÷', 'op'),
+            ('7', 'num'),   ('8', 'num'),  ('9', 'num'),      ('×', 'op'),
+            ('4', 'num'),   ('5', 'num'),  ('6', 'num'),      ('-', 'op'),
+            ('1', 'num'),   ('2', 'num'),  ('3', 'num'),      ('+', 'op'),
+            ('0', 'num'),   ('.', 'num'),  ('<[x]', 'back'),  ('=', 'eq'),
         ]
         for text, kind in layout:
             btn = Button(text=text, font_size=dp(26),
                          background_normal='',
-                         background_color=self._color(kind))
+                         background_color=self._color(kind),
+                         markup=False)
+            # Сохраняем тип кнопки прямо в виджете.
+            # Логика работает по типу, а не по тексту — не сломается,
+            # если поменять надпись на кнопке.
+            btn.kind = kind
             btn.bind(on_press=self.on_press)
             grid.add_widget(btn)
         self.add_widget(grid)
@@ -61,21 +66,26 @@ class CalcRoot(BoxLayout):
             return (0.75, 0.30, 0.30, 1)   # красные — очистка
         return (0.25, 0.25, 0.28, 1)       # серые — цифры
 
-        def on_press(self, instance):
+    def on_press(self, instance):
+        # Логика идёт ПО ТИПУ КНОПКИ, а не по её надписи.
+        kind = getattr(instance, 'kind', None)
         t = instance.text
 
-        if t == 'C':
+        if kind == 'clear':
             self.expression = ''
             self.display.text = '0'
+            return
 
-        elif t == '<[x]':
+        if kind == 'back':
             self.expression = self.expression[:-1]
             self.display.text = self.expression or '0'
+            return
 
-        elif t == '√':
+        if kind == 'sqrt':
             self._apply_sqrt()
+            return
 
-        elif t == '=':
+        if kind == 'eq':
             try:
                 res = self._eval(self.expression or '0')
                 self.expression = self._fmt(res)
@@ -83,15 +93,16 @@ class CalcRoot(BoxLayout):
             except Exception:
                 self.display.text = 'Ошибка'
                 self.expression = ''
+            return
 
-        else:
-            ch = t
-            if ch == '×':
-                ch = '*'
-            elif ch == '÷':
-                ch = '/'
-            self.expression += ch
-            self.display.text = self.expression
+        # Осталось: цифры, точка, операции.
+        ch = t
+        if ch == '×':
+            ch = '*'
+        elif ch == '÷':
+            ch = '/'
+        self.expression += ch
+        self.display.text = self.expression
 
     def _apply_sqrt(self):
         """Извлекает корень из последнего числа в выражении."""
